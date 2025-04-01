@@ -1,5 +1,6 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
+from flask_caching import Cache
 from bs4 import BeautifulSoup
 import requests
 import re
@@ -8,12 +9,19 @@ from datetime import datetime
 app = Flask(__name__)
 CORS(app)
 
+# implement caching
+app.config['CACHE_TYPE'] = 'SimpleCache'
+app.config['CACHE_DEFAULT_TIMEOUT'] = 300 #5 minutes timeout
+cache = Cache(app)
+
 def extract_days(posted_date):
+    """helper function to extract number of days from the "posted date"""
     match = re.match(r'(\d+)\s+days?\s+ago', posted_date)
     return int(match.group(1)) if match else None
 
-def scrape_jobs():
-    url = "https://www.timesjobs.com/candidate/job-search.html?searchType=personalizedSearch&from=submit&txtKeywords=python"
+def scrape_jobs(page=1, per_page=6):
+    """function to scrape jobs with pagination support"""
+    url = f"https://www.timesjobs.com/candidate/job-search.html?searchType=personalizedSearch&from=submit&txtKeywords=python&page={page}"
     response = requests.get(url)
     soup = BeautifulSoup(response.text, "lxml")
     jobs = soup.find_all('li', class_='clearfix job-bx wht-shd-bx')
@@ -40,11 +48,18 @@ def scrape_jobs():
                 "link": link
             })
 
-    return job_list
+    # Implement pagination: return only a slice of the job_list
+    start = (page - 1) * per_page
+    end = start + per_page
+    return job_list[start:end]
 
 @app.route('/api/jobs', methods=['GET'])
+@cache.cached(query_string=True)
 def get_jobs():
-    jobs = scrape_jobs()
+    page = int(request.args.get('page', 1))
+    per_page = int(request.args.get('per_page', 6))
+
+    jobs = scrape_jobs(page, per_page)
     return jsonify(jobs)
 
 if __name__ == '__main__':
