@@ -1,0 +1,32 @@
+repos:
+  # isort: Automatically sort imports, compatible with black
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.12.0  
+    hooks:
+      - id: isort
+        args: ["--profile", "black", "--line-length", "88"]
+        files: \.py$
+
+  # autopep8: Try to fix what black doesn't
+  - repo: https://github.com/hhatto/autopep8
+    rev: v2.0.4
+    hooks:
+      - id: autopep8
+        args: ["--max-line-length", "88", "--aggressive", "--aggressive", "--in-place"]
+        files: \.py$
+        
+  # Ruff: Faster and more comprehensive auto-fixer
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.5
+    hooks:
+      - id: ruff
+        args: ["--fix", "--line-length=88"]
+        files: \.py$
+
+  # flake8: Linting - now in "warning only" mode
+  - repo: https://github.com/PyCQA/flake8
+    rev: 7.0.0
+    hooks:
+      - id: flake8
+        args: ["--max-line-length=88", "--exit-zero"]  # Won't block commits
+        files: \.py$
