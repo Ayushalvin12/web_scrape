@@ -67,6 +67,11 @@ def scrape_jobs(page=1, per_page=6):
     return job_list[start:end]
 
 
+def scrape_linkedin_jobs(page=1, per_page=6):
+    """placeholder for scraping linked in or similar websites"""
+    pass
+
+
 @app.route("/api/jobs", methods=["GET"])
 @cache.cached(query_string=True)
 def get_jobs():
